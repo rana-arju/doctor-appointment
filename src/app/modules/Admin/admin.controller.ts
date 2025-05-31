@@ -32,7 +32,27 @@ const getSingleAdminFromDB = async (req: Request, res: Response) => {
     return;
   }
 };
+const updateSingleAdminFromDB = async (req: Request, res: Response) => { 
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const result = await adminService.updateSingleAdmin(id, data);
+    res.status(200).json({
+      success: true,
+      message: "Admin updated successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error?.message,
+    });
+    return;
+  }
+}
 export const adminController = {
   getAllAdminFromDB,
   getSingleAdminFromDB,
+  updateSingleAdminFromDB,
 };

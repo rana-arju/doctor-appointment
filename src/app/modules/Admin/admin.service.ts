@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Admin, Prisma } from "@prisma/client";
 import { adminSearchableFields } from "./admin.constant";
 import { paginationHelper } from "../../helper/pagination";
 import prisma from "../../../shared/prisma";
@@ -56,19 +56,37 @@ const AllAdminGet = async (params: any, options: any) => {
 };
 
 //get single admin by id
-const getSingleAdmin = async (id: string) => { 
+const getSingleAdmin = async (id: string) => {
   const result = await prisma.admin.findUnique({
     where: {
       id,
     },
-  })
+  });
   if (!result) {
     throw new Error("Admin not found");
   }
   return result;
-}
-
+};
+// single admin update
+const updateSingleAdmin = async (id: string, data: Partial<Admin>) => {
+  const isExist = await prisma.admin.findUnique({
+    where: {
+      id,
+    },
+  });
+  if (!isExist) {
+    throw new Error("Admin not found");
+  }
+  const result = await prisma.admin.update({
+    where: {
+      id,
+    },
+    data,
+  });
+  return result;
+};
 export const adminService = {
   AllAdminGet,
   getSingleAdmin,
+  updateSingleAdmin,
 };
