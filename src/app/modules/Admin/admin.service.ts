@@ -1,24 +1,24 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { adminSearchableFields } from "./admin.constant";
+import { paginationHelper } from "../../helper/pagination";
+import prisma from "../../../shared/prisma";
 
-const prisma = new PrismaClient();
 
-const AllAdminGet = async (params: any) => {
-  const {searchTerm, ...filterData} = params;
+const AllAdminGet = async (params: any, options: any) => {
+  const { searchTerm, ...filterData } = params;
+  const { page, limit, sortBy, sortOrder, skip } =
+    paginationHelper.calculatePagination(options);
   const addCondition: Prisma.AdminWhereInput[] = [];
-  const adminSearchableFields: (keyof Prisma.AdminWhereInput)[] = [
-    'name',
-    'email',
-  ]
+
   if (searchTerm) {
     addCondition.push({
       OR: adminSearchableFields.map((field) => ({
         [field]: {
           contains: params.searchTerm,
-          mode: 'insensitive',
+          mode: "insensitive",
         },
       })),
     });
-    
   }
 
   if (Object.keys(filterData).length > 0) {
@@ -26,17 +26,21 @@ const AllAdminGet = async (params: any) => {
       AND: Object.keys(filterData).map((key) => ({
         [key]: {
           equals: filterData[key],
-          mode: 'insensitive',
+          mode: "insensitive",
         },
       })),
     });
   }
   const whereCondition: Prisma.AdminWhereInput = {
-    AND: addCondition
-  }
+    AND: addCondition,
+  };
   const result = await prisma.admin.findMany({
-    where:  whereCondition
-    
+    where: whereCondition,
+    skip: (Number(page) - 1) * Number(limit),
+    take: Number(limit),
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
   });
   return result;
 };
