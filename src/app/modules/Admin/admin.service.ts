@@ -2,8 +2,14 @@ import { Admin, Prisma, UserStatus } from "@prisma/client";
 import { adminSearchableFields } from "./admin.constant";
 import { paginationHelper } from "../../helper/pagination";
 import prisma from "../../../shared/prisma";
+import { IAdminFilterRequest } from "./admin.interface";
+import { IPaginationOptions } from "../../interfaces";
+
 // Get all admins with pagination, sorting, and filtering
-const AllAdminGet = async (params: any, options: any) => {
+const AllAdminGet = async (
+  params: IAdminFilterRequest,
+  options: IPaginationOptions
+) => {
   const { searchTerm, ...filterData } = params;
   const { page, limit, sortBy, sortOrder, skip } =
     paginationHelper.calculatePagination(options);
@@ -24,19 +30,19 @@ const AllAdminGet = async (params: any, options: any) => {
     addCondition.push({
       AND: Object.keys(filterData).map((key) => ({
         [key]: {
-          equals: filterData[key],
+          equals: filterData[key as keyof typeof filterData],
           mode: "insensitive",
         },
       })),
     });
   }
   addCondition.push({
-      isDeleted: false, // Ensure we only get non-deleted admins
-    });
+    isDeleted: false, // Ensure we only get non-deleted admins
+  });
   const whereCondition: Prisma.AdminWhereInput = {
     AND: addCondition,
   };
-  
+
   const result = await prisma.admin.findMany({
     where: whereCondition,
     skip: (Number(page) - 1) * Number(limit),
@@ -72,7 +78,10 @@ const getSingleAdmin = async (id: string): Promise<Admin | null> => {
   return result;
 };
 // single admin update
-const updateSingleAdmin = async (id: string, data: Partial<Admin>): Promise<Admin> => {
+const updateSingleAdmin = async (
+  id: string,
+  data: Partial<Admin>
+): Promise<Admin> => {
   const isExist = await prisma.admin.findUnique({
     where: {
       id,
@@ -91,7 +100,7 @@ const updateSingleAdmin = async (id: string, data: Partial<Admin>): Promise<Admi
   return result;
 };
 //Delete single admin
-const deleteSingleAdmin = async (id: string) :Promise<Admin | null> => {
+const deleteSingleAdmin = async (id: string): Promise<Admin | null> => {
   const isExist = await prisma.admin.findUnique({
     where: {
       id,
