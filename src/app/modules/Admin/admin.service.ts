@@ -2,8 +2,8 @@ import { Prisma } from "@prisma/client";
 import { adminSearchableFields } from "./admin.constant";
 import { paginationHelper } from "../../helper/pagination";
 import prisma from "../../../shared/prisma";
-
-
+import { get } from "http";
+// Get all admins with pagination, sorting, and filtering
 const AllAdminGet = async (params: any, options: any) => {
   const { searchTerm, ...filterData } = params;
   const { page, limit, sortBy, sortOrder, skip } =
@@ -42,9 +42,33 @@ const AllAdminGet = async (params: any, options: any) => {
       [sortBy]: sortOrder,
     },
   });
-  return result;
+  const total = await prisma.admin.count({
+    where: whereCondition,
+  });
+  return {
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+    },
+    data: result,
+  };
 };
+
+//get single admin by id
+const getSingleAdmin = async (id: string) => { 
+  const result = await prisma.admin.findUnique({
+    where: {
+      id,
+    },
+  })
+  if (!result) {
+    throw new Error("Admin not found");
+  }
+  return result;
+}
 
 export const adminService = {
   AllAdminGet,
+  getSingleAdmin,
 };
