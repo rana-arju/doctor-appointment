@@ -85,8 +85,34 @@ const updateSingleAdmin = async (id: string, data: Partial<Admin>) => {
   });
   return result;
 };
+//Delete single admin
+const deleteSingleAdmin = async (id: string) => {
+  const isExist = await prisma.admin.findUnique({
+    where: {
+      id,
+    },
+  });
+  if (!isExist) {
+    throw new Error("Admin not found");
+  }
+  const result = await prisma.$transaction(async (tx) => {
+    const deletedAdmin = await tx.admin.delete({
+      where: {
+        id,
+      },
+    });
+    await tx.user.delete({
+      where: {
+        email: deletedAdmin.email,
+      },
+    });
+    return deletedAdmin;
+  });
+  return result;
+};
 export const adminService = {
   AllAdminGet,
   getSingleAdmin,
   updateSingleAdmin,
+  deleteSingleAdmin,
 };
