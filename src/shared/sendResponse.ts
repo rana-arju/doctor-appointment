@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
-export const sendResponse = <T>(
+ const sendResponse = <T>(
   res: Response,
   jsonData: {
     statusCode: number;
@@ -21,3 +21,4 @@ export const sendResponse = <T>(
     meta: jsonData.meta || undefined || null,
   });
 };
+export default sendResponse;

@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { adminService } from "./admin.service";
 import { pick } from "../../../shared/pick";
 import { adminFilterableFields } from "./admin.constant";
-import { sendResponse } from "../../../shared/sendResponse";
+import  sendResponse  from "../../../shared/sendResponse";
 
 const getAllAdminFromDB = async (req: Request, res: Response) => {
   const query = pick(req.query, adminFilterableFields);
@@ -16,7 +16,7 @@ const getAllAdminFromDB = async (req: Request, res: Response) => {
     data: result.data,
   });
 };
-const getSingleAdminFromDB = async (req: Request, res: Response) => {
+const getSingleAdminFromDB = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const result = await adminService.getSingleAdmin(id);
@@ -27,15 +27,10 @@ const getSingleAdminFromDB = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error?.message,
-    });
-    return;
+    next(error)
   }
 };
-const updateSingleAdminFromDB = async (req: Request, res: Response) => {
+const updateSingleAdminFromDB = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const data = req.body;
@@ -47,15 +42,10 @@ const updateSingleAdminFromDB = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error?.message,
-    });
-    return;
+   next(error);
   }
 };
-const deleteSingleAdminFromDB = async (req: Request, res: Response) => {
+const deleteSingleAdminFromDB = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const result = await adminService.deleteSingleAdmin(id);
@@ -66,18 +56,12 @@ const deleteSingleAdminFromDB = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error?.message,
-    });
-    return;
+   next(error);
   }
 };
-const softDeleteSingleAdminFromDB = async (req: Request, res: Response) => {
+const softDeleteSingleAdminFromDB = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    console.log("Soft delete admin with ID:", id);
 
     const result = await adminService.softDeleteSingleAdmin(id);
     sendResponse(res, {
@@ -87,12 +71,7 @@ const softDeleteSingleAdminFromDB = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error?.message,
-    });
-    return;
+    next(error);
   }
 };
 export const adminController = {

@@ -1,16 +1,14 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
-import { userRoutes } from "./app/modules/User/user.route";
-import { adminRoutes } from "./app/modules/Admin/admin.route";
+
+import router from "./app/router";
+import globalErrorHandler from "./middlewares/globalErrorHandler";
+import { error } from "console";
 const app: Application = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/api/v1/user", userRoutes);
-app.use("/api/v1/admin", adminRoutes);
-
-
-
+app.use("/api/v1", router);
 
 app.get("/", (req: Request, res: Response) => {
   res.send({
@@ -18,5 +16,18 @@ app.get("/", (req: Request, res: Response) => {
     developer: "Mohammad Rana Arju",
   });
 });
-
+app.use(globalErrorHandler);
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(404).json({
+    success: false,
+    message: "Not Found",
+    error: 
+    {
+      path:  req.originalUrl,
+      message: "Your requested resource was not found on this server.",
+      
+    },
+  });
+  next();
+});
 export default app;
