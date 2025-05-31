@@ -69,9 +69,30 @@ const deleteSingleAdminFromDB = async (req: Request, res: Response) => {
     return;
   }
 }
+const softDeleteSingleAdminFromDB = async (req: Request, res: Response) => { 
+  try {
+    const { id } = req.params;
+    console.log("Soft delete admin with ID:", id);
+    
+    const result = await adminService.softDeleteSingleAdmin(id);
+    res.status(200).json({
+      success: true,
+      message: "Admin deleted successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error?.message,
+    });
+    return;
+  }
+}
 export const adminController = {
   getAllAdminFromDB,
   getSingleAdminFromDB,
   updateSingleAdminFromDB,
   deleteSingleAdminFromDB,
+  softDeleteSingleAdminFromDB,
 };
