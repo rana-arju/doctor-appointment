@@ -159,9 +159,34 @@ const forgetPassword = async (email: string) => {
 
   return { resetUrl };
 };
+const resetPassword = async (token: string, payload: any) => {
+  const isExist = await prisma.user.findUnique({
+    where: {
+      id: payload?.id,
+      status: UserStatus.ACTIVE,
+    },
+  });
+  if (!isExist) {
+    throw new Error("User not found");
+  }
+  const isValid = verifyToken(token, config.jwt.jwtSecret as Secret);
+  if (!isValid) {
+    throw new ApiError(401, "Unauthorized");
+  }
+  const hashedPassword = await bcrypt.hash(payload.newPassword, 10);
+  await prisma.user.update({
+    where: {
+      id: payload.id,
+    },
+    data: {
+      password: hashedPassword,
+    },
+  });
+};
 export const authService = {
   loginUser,
   refreshUserToken,
   passwordChange,
   forgetPassword,
+  resetPassword,
 };

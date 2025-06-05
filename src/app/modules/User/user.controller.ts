@@ -4,7 +4,7 @@ import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
-  const result = await adminServices.createAdmin(req.body);
+  const result = await adminServices.createAdmin(req.file, req.body);
   sendResponse(res, {
     statusCode: 201,
     success: true,
