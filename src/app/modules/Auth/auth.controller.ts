@@ -3,6 +3,8 @@ import sendResponse from "../../../shared/sendResponse";
 import { authService } from "./auth.service";
 
 const loginUser = catchAsync(async (req, res) => {
+  console.log(req.body);
+  
   const result = await authService.loginUser(req.body);
   const { accessToken, refreshToken, needPasswordChange } = result;
   res.cookie("refreshToken", refreshToken, {

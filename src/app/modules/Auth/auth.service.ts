@@ -1,9 +1,10 @@
 import prisma from "../../../shared/prisma";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
 
-import generateToken from "../../helper/jwtHelper";
 import { UserStatus } from "@prisma/client";
+import config from "../../../config";
+import { generateToken, verifyToken } from "../../helper/jwtHelper";
 const loginUser = async (payload: any) => {
   const isExist = await prisma.user.findUnique({
     where: {
@@ -26,46 +27,43 @@ const loginUser = async (payload: any) => {
     {
       id: isExist.id,
       email: isExist.email,
+      role: isExist.role,
     },
-    "4c3e40b6-de26-454d-b5ae-8e2dcf512277",
-    "1h"
+    config.jwt.jwtSecret as Secret,
+    config.jwt.jwtExpiration as string
   );
+
   const refreshToken = generateToken(
     {
       id: isExist.id,
       email: isExist.email,
+      role: isExist.role,
     },
-    "4c3e40b6-de26-454d-b5ae-8e2dcf512277",
-    "365d"
+    config.jwt.jwtRefreshSecret as Secret,
+    config.jwt.jwtRefreshExpiration as string
   );
+
   return {
     accessToken,
     refreshToken,
     needPasswordChange: isExist.needPasswordChange,
   };
 };
-const refreshUserToken = async (payload: any) => { 
+const refreshUserToken = async (payload: any) => {
   let decode;
   try {
-    decode = jwt.verify(payload, "4c3e40b6-de26-454d-b5ae-8e2dcf512277") as {
-      id: string;
-      email: string;
-      iat: number;
-      exp: number;
-    };
+    decode = verifyToken(payload, config.jwt.jwtRefreshSecret as Secret);
   } catch (error) {
     throw new Error("you  are not authorized to access this resource");
   }
 
-  
   const isExist = await prisma.user.findUnique({
     where: {
       email: decode.email,
-      status: UserStatus.ACTIVE
+      status: UserStatus.ACTIVE,
     },
   });
-  console.log("User found:", isExist);
-  
+
   if (!isExist) {
     throw new Error("User not found");
   }
@@ -74,14 +72,15 @@ const refreshUserToken = async (payload: any) => {
       id: isExist.id,
       email: isExist.email,
     },
-    "4c3e40b6-de26-454d-b5ae-8e2dcf512277",
-    "1h"
+    config.jwt.jwtSecret as Secret,
+    config.jwt.jwtExpiration as string
   );
+
   return {
     accessToken,
     needChangePassword: isExist.needPasswordChange,
   };
-}
+};
 export const authService = {
   loginUser,
   refreshUserToken,
