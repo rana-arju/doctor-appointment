@@ -5,6 +5,7 @@ import jwt, { Secret } from "jsonwebtoken";
 import { UserStatus } from "@prisma/client";
 import config from "../../../config";
 import { generateToken, verifyToken } from "../../helper/jwtHelper";
+import ApiError from "../../errors/ApiError";
 const loginUser = async (payload: any) => {
   const isExist = await prisma.user.findUnique({
     where: {
@@ -81,7 +82,44 @@ const refreshUserToken = async (payload: any) => {
     needChangePassword: isExist.needPasswordChange,
   };
 };
+const passwordChange = async (userData: any, payload: any) => {
+  console.log(payload);
+  
+  if (!userData.id || !userData.email) {
+    throw new ApiError(400, "User data is not provided");
+  }
+  const isExist = await prisma.user.findUnique({
+    where: {
+      email: userData.email,
+      id: userData.id,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  if (!isExist) {
+    throw new Error("User not found");
+  }
+
+  const isPasswordMatch = await bcrypt.compare(
+    payload.oldPassword,
+    isExist.password
+  );
+
+  if (!isPasswordMatch) {
+    throw new ApiError(400, "Creadentials are not valid");
+  }
+
+  const hashedPassword = await bcrypt.hash(payload.newPassword, 10);
+
+  await prisma.user.update({
+    where: { id: isExist.id },
+    data: { password: hashedPassword, needPasswordChange: false },
+  });
+
+  return { message: "Password changed successfully" };
+};
 export const authService = {
   loginUser,
   refreshUserToken,
+  passwordChange,
 };

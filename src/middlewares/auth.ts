@@ -17,7 +17,8 @@ const auth = (...roles: string[]) => {
           403,
           "Forbidden: You do not have permission to access this resource"
         );
-      }
+        }
+        req.user = verify
       next();
     } catch (error) {
       next(error);
