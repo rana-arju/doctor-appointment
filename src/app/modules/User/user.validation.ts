@@ -83,4 +83,5 @@ export const userValidation = {
   createAdmin,
   createDoctor,
   createPatient,
+  updateStatus,
 };

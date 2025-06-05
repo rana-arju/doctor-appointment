@@ -4,6 +4,7 @@ import { UserRole } from "@prisma/client";
 import auth from "../../../middlewares/auth";
 import { fileUploader } from "../../helper/fileUploader";
 import { userValidation } from "./user.validation";
+import { validateRequest } from "../../../middlewares/validationRequest";
 const router = express.Router();
 router.get(
   "/",
@@ -35,6 +36,12 @@ router.post(
     req.body = userValidation.createPatient.parse(JSON.parse(req.body.data));
     return userController.createPatient(req, res, next);
   }
+);
+router.patch(
+  "/:id/status",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  validateRequest(userValidation.updateStatus),
+  userController.changeProfileStatus
 );
 
 export const userRoutes = router;
