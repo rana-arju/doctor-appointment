@@ -28,36 +28,52 @@ const createAppointment = async (user: IAuthUser, payload: any) => {
   });
 
   const videoCallId = uuidv4();
-    const result = await prisma.$transaction(async (tx) => {
-       const appointmentData = await tx.appointment.create({
-          data: {
-            patientId: patientData.id,
-            doctorId: doctorData.id,
-            scheduleId: payload.scheduleId,
-            videoCallingId: videoCallId,
-          },
-          include: {
-            patient: true,
-            doctor: true,
-            schedule: true,
-          },
-       });
-        await tx.doctorSchedules.update({
-            where: {
-                doctorId_scheduleId: {
-                    doctorId: doctorData.id,
-                    scheduleId: payload.scheduleId,
-                }
-            },
-            data: {
-                isBooked: true,
-                appointmentId: appointmentData.id,
-            }
-        })
-        return appointmentData;
+  console.log(videoCallId, "videoCallId");
+
+  const result = await prisma.$transaction(async (tx) => {
+    const appointmentData = await tx.appointment.create({
+      data: {
+        patientId: patientData.id,
+        doctorId: doctorData.id,
+        scheduleId: payload.scheduleId,
+        videoCallingId: videoCallId,
+      },
+      include: {
+        patient: true,
+        doctor: true,
+        schedule: true,
+      },
+    });
+    await tx.doctorSchedules.update({
+      where: {
+        doctorId_scheduleId: {
+          doctorId: doctorData.id,
+          scheduleId: payload.scheduleId,
+        },
+      },
+      data: {
+        isBooked: true,
+        appointmentId: appointmentData.id,
+      },
+    });
+    const today = new Date();
+    const transectionId =
+      "HEALTH-" +
+      "-" +
+      today.getFullYear() +
+      "-" +
+      today.getMonth() +
+      "-" +
+      today.getDay();
+    await tx.payment.create({
+      data: {
+        appointmentId: appointmentData.id,
+        amount: doctorData.appointmentFee,
+        transactionId: transectionId,
+      },
+    });
+    return appointmentData;
   });
-
-
   return result;
 };
 
